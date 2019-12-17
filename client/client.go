@@ -29,10 +29,4 @@ func main() {
 		fmt.Printf("failed to upload file err:%v\n", err)
 	}
 	fmt.Println("succeed")
-	//newFile, err := os.Create("./test.txt")
-	//if err != nil {
-	//	fmt.Printf("failed to create file, err:%v\n", err)
-	//	return
-	//}
-	//newFile.Close()
 }
