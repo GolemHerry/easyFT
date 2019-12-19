@@ -5,6 +5,7 @@ package proto;
 service TransferService {
     rpc Download (DownloadRequest) returns (stream DownloadResponse) {};
     rpc Upload (stream UploadRequest) returns (UploadResponse) {};
+    rpc List (ListRequest) returns (stream ListResponse) {};
 }
 
 message DownloadRequest {
@@ -23,4 +24,14 @@ message UploadRequest {
 message UploadResponse {
     bool finished = 1;
     string fileHash = 2;
+}
+
+message ListRequest {
+    string directory = 1;
+}
+
+message ListResponse {
+    string name = 1;
+    int64 size = 2;
+    uint32 mode = 3;
 }

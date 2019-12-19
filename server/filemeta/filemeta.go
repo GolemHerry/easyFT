@@ -1,7 +1,7 @@
 package filemeta
 
 import (
-	"github.com/GolemHerry/easyFT/server/db"
+	"github.com/GolemHerry/easyfiler/server/db"
 )
 
 type FileMeta struct {
@@ -11,12 +11,6 @@ type FileMeta struct {
 	FileSize int64
 	Location string
 	UploadAt string
-}
-
-var fileMetas map[string]FileMeta
-
-func init() {
-	fileMetas = make(map[string]FileMeta, 10)
 }
 
 func UpdateFileMeta(f FileMeta) bool {

@@ -2,9 +2,9 @@ package filehandle
 
 import (
 	"fmt"
-	"github.com/GolemHerry/easyFT/proto"
-	"github.com/GolemHerry/easyFT/server/filemeta"
-	"github.com/GolemHerry/easyFT/server/util"
+	"github.com/GolemHerry/easyfiler/proto"
+	"github.com/GolemHerry/easyfiler/server/filemeta"
+	"github.com/GolemHerry/easyfiler/server/util"
 	"io"
 	"os"
 	"path/filepath"
@@ -15,14 +15,32 @@ type FileTransferService struct {
 	Root string
 }
 
+func (fts *FileTransferService) List(r *proto.ListRequest, stream proto.TransferService_ListServer) error {
+	err := filepath.Walk(fts.Root, func(p string, info os.FileInfo, err error) error {
+		name, err := filepath.Rel(fts.Root, p)
+		if err != nil {
+			return err
+		}
+		name = filepath.ToSlash(name)
+		f := &proto.ListResponse{
+			Name: filepath.ToSlash(name),
+			Size: info.Size(),
+			Mode: uint32(info.Mode()),
+		}
+		return stream.Send(f)
+	})
+	return err
+}
+
 func (fts *FileTransferService) Download(r *proto.DownloadRequest, stream proto.TransferService_DownloadServer) error {
-	file, err := os.Open(filepath.Join(fts.Root, r.Name))
+	file, err := os.Open(fts.Root + r.Name)
 	if err != nil {
+		fmt.Println("no file", err)
 		return err
 	}
 	defer file.Close()
 
-	var b [4096 * 1000]byte
+	var b [1024 * 1024]byte
 	for {
 		n, err := file.Read(b[:])
 		if err != nil {
@@ -38,6 +56,7 @@ func (fts *FileTransferService) Download(r *proto.DownloadRequest, stream proto.
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -48,7 +67,7 @@ func (fts *FileTransferService) Upload(stream proto.TransferService_UploadServer
 		return err
 	}
 	fileMeta := filemeta.FileMeta{
-		Location: "./tmp/" + r.FileName,
+		Location: fts.Root + r.FileName,
 		UploadAt: time.Now().Format("2006-01-02 15:04:05"),
 	}
 
@@ -65,6 +84,7 @@ func (fts *FileTransferService) Upload(stream proto.TransferService_UploadServer
 	fileMeta.FileSha1 = util.FileSha1(newFile)
 	ok := filemeta.UpdateFileMeta(fileMeta)
 	if !ok {
+		fmt.Println("already exist")
 		return fmt.Errorf("failed to upload")
 	}
 	stream.SendAndClose(&proto.UploadResponse{

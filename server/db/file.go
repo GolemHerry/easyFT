@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	mydb "github.com/GolemHerry/easyFT/server/db/mysql"
+	mydb "github.com/GolemHerry/easyfiler/server/db/mysql"
 )
 
 type TableFile struct {
@@ -13,7 +13,7 @@ type TableFile struct {
 	FileAddr sql.NullString
 }
 
-func UploadAndFinished(filehash, filename, fileaddr string, filesize int64) (ok bool) {
+func UploadAndFinished(filehash, filename, fileaddr string, filesize int64) bool {
 	const sqlStr = `insert into easyft(file_sha1,file_name,file_size,file_addr,status) values(?,?,?,?,1)`
 	stmt, err := mydb.DBConn().Prepare(sqlStr)
 	if err != nil {
