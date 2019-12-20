@@ -1,10 +1,10 @@
 package filehandle
 
 import (
+	"easyfiler/pkg/filemeta"
+	"easyfiler/pkg/proto"
+	"easyfiler/pkg/util"
 	"fmt"
-	"github.com/GolemHerry/easyfiler/proto"
-	"github.com/GolemHerry/easyfiler/server/filemeta"
-	"github.com/GolemHerry/easyfiler/server/util"
 	"io"
 	"os"
 	"path/filepath"
@@ -12,11 +12,12 @@ import (
 )
 
 type FileTransferService struct {
-	Root string
+	Root   string
+	WithDB bool
 }
 
 func (fts *FileTransferService) List(r *proto.ListRequest, stream proto.TransferService_ListServer) error {
-	err := filepath.Walk(fts.Root, func(p string, info os.FileInfo, err error) error {
+	err := filepath.Walk(fts.Root+r.Directory, func(p string, info os.FileInfo, err error) error {
 		name, err := filepath.Rel(fts.Root, p)
 		if err != nil {
 			return err
@@ -79,13 +80,15 @@ func (fts *FileTransferService) Upload(stream proto.TransferService_UploadServer
 	defer newFile.Close()
 
 	size, err := newFile.Write(r.Data)
-	fileMeta.FileSize = int64(size)
-	newFile.Seek(0, 0)
-	fileMeta.FileSha1 = util.FileSha1(newFile)
-	ok := filemeta.UpdateFileMeta(fileMeta)
-	if !ok {
-		fmt.Println("already exist")
-		return fmt.Errorf("failed to upload")
+	if fts.WithDB {
+		fileMeta.FileSize = int64(size)
+		newFile.Seek(0, 0)
+		fileMeta.FileSha1 = util.FileSha1(newFile)
+		ok := filemeta.UpdateFileMeta(fileMeta)
+		if !ok {
+			fmt.Println("already exist")
+			return fmt.Errorf("failed to upload")
+		}
 	}
 	stream.SendAndClose(&proto.UploadResponse{
 		Finished: true,

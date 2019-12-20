@@ -1,7 +1,7 @@
 package filemeta
 
 import (
-	"github.com/GolemHerry/easyfiler/server/db"
+	"easyfiler/pkg/db"
 )
 
 type FileMeta struct {

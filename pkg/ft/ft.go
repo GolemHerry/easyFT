@@ -2,18 +2,18 @@ package ft
 
 import (
 	"context"
+	"easyfiler/pkg/proto"
 	"fmt"
-	"github.com/GolemHerry/easyfiler/proto"
 	"google.golang.org/grpc"
 	"io/ioutil"
 	"os"
 )
 
-func List(target, dir string) error {
+func List(target, dir string) ([]proto.ListResponse, error) {
 	conn, err := grpc.Dial(target, grpc.WithInsecure())
 	if err != nil {
 		fmt.Printf("faild to connect: %v", err)
-		return err
+		return nil, err
 	}
 	defer conn.Close()
 
@@ -22,19 +22,18 @@ func List(target, dir string) error {
 		Directory: dir,
 	}
 	listClient, err := c.List(context.Background(), reqData)
+	var lists = make([]proto.ListResponse, 0)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fmt.Println("filename  size  mode")
 	for {
 		res, err := listClient.Recv()
 		if err != nil {
 			break
 		}
-		fmt.Printf("%s\t%d\t%d\n", res.Name, res.Size, res.Mode)
-
+		lists = append(lists, *res)
 	}
-	return nil
+	return lists, nil
 }
 
 func Upload(target, filename string) error {

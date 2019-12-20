@@ -2,8 +2,8 @@ package db
 
 import (
 	"database/sql"
+	mydb "easyfiler/pkg/db/mysql"
 	"fmt"
-	mydb "github.com/GolemHerry/easyfiler/server/db/mysql"
 )
 
 type TableFile struct {
@@ -53,6 +53,7 @@ func GetFileMeta(filehash string) (*TableFile, error) {
 	}
 	return &tablefile, nil
 }
+
 func DeleteFileMeta(filehash string) (ok bool, err error) {
 	const sqlStr = `delete from easyft where file_sha1=? and status=1`
 	stmt, err := mydb.DBConn().Prepare(sqlStr)

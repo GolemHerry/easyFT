@@ -3,28 +3,34 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
-	"os"
-
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var db *sql.DB
 
-func init() {
+type DBconf struct {
+	User     string
+	Password string
+	Host     string
+	DB       string
+}
+
+func InitDB(d DBconf) error {
 	var err error
-	dsn := "root:golem@tcp(47.100.114.83)/vigny"
-	db, err = sql.Open("mysql", dsn)
+	dsn := `%s:%s@tcp(%s:3306)/%s`
+	db, err = sql.Open("mysql", fmt.Sprintf(dsn, d.User, d.Password, d.Host, d.DB))
 	if err != nil {
 		fmt.Printf("Failed to open connection to mysql, error:%v\n", err)
-		os.Exit(1)
+		return err
 	}
 	err = db.Ping()
 	if err != nil {
 		fmt.Printf("Failed to connect to mysql, error:%v\n", err)
-		os.Exit(1)
+		return err
 	}
 	fmt.Println("connected to mysql")
 	db.SetMaxOpenConns(1000)
+	return nil
 }
 
 func DBConn() *sql.DB {
